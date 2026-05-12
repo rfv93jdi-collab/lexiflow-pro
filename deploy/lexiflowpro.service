@@ -1,0 +1,24 @@
+# Активный unit на сервере lexiflowpro.ru: Petrovskaia VKR, порт 3020 (см. Nginx sites-available/lexiflow).
+# Установка:
+#   sudo cp deploy/lexiflowpro.service /etc/systemd/system/lexiflowpro.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now lexiflowpro
+#
+# Перед первым запуском: cd <repo> && npm ci && npm run build
+# Секреты: только в .env.local на сервере (LLMOST_API_KEY и т.д.).
+
+[Unit]
+Description=LexiFlow Pro (lexiflowpro.ru) — Petrovskaia VKR
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/https-github.com-blondinkaizakon-Petrovskaia_VKR-main
+Environment=NODE_ENV=production
+Environment=PORT=3020
+EnvironmentFile=-/root/https-github.com-blondinkaizakon-Petrovskaia_VKR-main/.env.local
+ExecStart=/usr/bin/env npx tsx server.ts
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

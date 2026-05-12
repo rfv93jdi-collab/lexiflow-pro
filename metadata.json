@@ -1,0 +1,7 @@
+{
+  "name": "Remix: Legal Health Check \u0026 Quest",
+  "description": "A gamified legal risk assessment and management platform for businesses of all sizes.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

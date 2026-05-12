@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "company": { "type": "string" },
+        "role": { "type": "string" },
+        "avatar": { "type": "string" },
+        "healthScore": { "type": "number" },
+        "segment": { "type": "string", "enum": ["small", "large"] },
+        "isQuestCompleted": { "type": "boolean" },
+        "categoryScores": {
+          "type": "object",
+          "properties": {
+            "hr": { "type": "number" },
+            "infosec": { "type": "number" },
+            "court": { "type": "number" },
+            "tax": { "type": "number" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "company", "role"]
+    },
+    "Risk": {
+      "title": "Risk",
+      "description": "A detected legal or operational risk",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "probability": { "type": "number" },
+        "impact": { "type": "number" },
+        "severity": { "type": "string", "enum": ["Низкий", "Средний", "Высокий", "Критично"] },
+        "category": { "type": "string" },
+        "status": { "type": "string", "enum": ["open", "resolved"] },
+        "recommendation": { "type": "string" },
+        "actionPlan": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "severity", "status"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A task assigned to resolve a risk or improve compliance",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["todo", "done"] },
+        "points": { "type": "number" },
+        "riskId": { "type": "string" },
+        "deadline": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "status"]
+    },
+    "Regulation": {
+      "title": "Regulation",
+      "description": "A uploaded legal document or regulation",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "lastUpdated": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "content", "category"]
+    },
+    "ActivityLog": {
+      "title": "Activity Log",
+      "description": "Log of user actions for audit trail",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "user": { "type": "string" },
+        "type": { "type": "string", "enum": ["quest", "audit", "task", "regulation"] }
+      },
+      "required": ["userId", "action", "timestamp", "user", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Main user document"
+    },
+    "/risks/{riskId}": {
+      "schema": "Risk",
+      "description": "Global risks collection (indexed by userId)"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Global tasks collection (indexed by userId)"
+    },
+    "/regulations/{regId}": {
+      "schema": "Regulation",
+      "description": "Global regulations collection (indexed by userId)"
+    },
+    "/activityLogs/{logId}": {
+      "schema": "ActivityLog",
+      "description": "Audit trail logs (indexed by userId)"
+    }
+  }
+}

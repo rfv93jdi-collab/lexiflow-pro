@@ -1,0 +1,123 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- Entity Specific Helpers ---
+
+    function isValidUser(data) {
+      return data.name is string && data.name.size() <= 100 &&
+             data.company is string && data.company.size() <= 100 &&
+             data.role is string && data.role.size() <= 100;
+    }
+
+    function isValidRisk(data) {
+      return isValidId(data.userId) &&
+             data.userId == request.auth.uid &&
+             data.title is string && data.title.size() <= 200 &&
+             data.severity in ['Низкий', 'Средний', 'Высокий', 'Критично'] &&
+             data.status in ['open', 'resolved'];
+    }
+
+    function isValidTask(data) {
+      return isValidId(data.userId) &&
+             data.userId == request.auth.uid &&
+             data.title is string && data.title.size() <= 200 &&
+             data.status in ['todo', 'done'];
+    }
+
+    function isValidRegulation(data) {
+      return isValidId(data.userId) &&
+             data.userId == request.auth.uid &&
+             data.title is string && data.title.size() <= 200 &&
+             data.content is string && data.content.size() <= 100000 &&
+             data.category is string && data.category.size() <= 50;
+    }
+
+    function isValidActivityLog(data) {
+      return isValidId(data.userId) &&
+             data.userId == request.auth.uid &&
+             data.action is string && data.action.size() <= 200 &&
+             data.timestamp is timestamp && data.timestamp == request.time;
+    }
+
+    // --- Match Blocks ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().createdAt == request.time;
+      allow update: if isOwner(userId) && isValidUser(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'company', 'role', 'avatar', 'healthScore', 'segment', 'isQuestCompleted', 'categoryScores', 'updatedAt']) &&
+        incoming().updatedAt == request.time &&
+        incoming().createdAt == existing().createdAt
+      );
+    }
+
+    match /risks/{riskId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidRisk(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidRisk(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'probability', 'impact', 'severity', 'category', 'status', 'recommendation', 'actionPlan', 'updatedAt']) &&
+        incoming().updatedAt == request.time &&
+        incoming().userId == existing().userId
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /tasks/{taskId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidTask(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidTask(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'status', 'points', 'riskId', 'deadline', 'updatedAt']) &&
+        incoming().updatedAt == request.time &&
+        incoming().userId == existing().userId
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /regulations/{regId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidRegulation(incoming()) && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidRegulation(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content', 'category', 'lastUpdated', 'updatedAt']) &&
+        incoming().updatedAt == request.time &&
+        incoming().userId == existing().userId
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /activityLogs/{logId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidActivityLog(incoming());
+      // Logs are immutable
+      allow update, delete: if false;
+    }
+  }
+}
