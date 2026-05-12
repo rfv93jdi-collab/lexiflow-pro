@@ -120,9 +120,9 @@ VITE_BASE_URL=/имя-репозитория/ npm run build
 
 4. Для приватных ключей и `.env.local` используйте **Secrets** в CI или переменные окружения на PaaS, не коммитьте секреты.
 
-## CI
+## CI (GitHub Actions)
 
-В репозитории настроен workflow **GitHub Actions**: на push и pull request в `main` выполняются `npm ci` и `npm run build` (проверка собираемости без секретов LLM/Firebase в PR — при необходимости донастройте шаги под ваши `import.meta.env`).
+Готовый пример лежит в репозитории: [`docs/github-actions-ci.yml`](docs/github-actions-ci.yml). Для push из окружений с GitHub OAuth без scope **`workflow`** загрузка `.github/workflows/*` может быть запрещена — в таком случае добавьте workflow вручную в веб-интерфейсе GitHub или используйте Personal Access Token с правом **workflow**.
 
 ## Лицензия
 

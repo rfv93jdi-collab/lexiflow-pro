@@ -1,3 +1,4 @@
+# Скопируйте в .github/workflows/ci.yml (или включите через PR с PAT со scope workflow)
 name: CI
 
 on:
@@ -27,5 +28,4 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Сборка без секретов; при необходимости подставьте публичные ключи Firebase через GitHub Secrets
           VITE_BASE_URL: /
